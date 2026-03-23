@@ -287,7 +287,59 @@
             </section>
 
             <section class="page" data-view="fluxo-trabalho">
-                <p class="page__placeholder">Fluxo de trabalho será construído no próximo passo.</p>
+                <div class="workflow">
+                    <div class="workflow__toolbar">
+                        <div>
+                            <h1 class="page__title">Fluxo de documentos por caixa</h1>
+                            <p class="page__subtitle">Cada pessoa visualiza sua caixa e move o documento para a próxima etapa.</p>
+                        </div>
+                        <div class="workflow__actions">
+                            <button type="button" class="btn btn--secondary" id="workflow-new-extra">Adicionar etapa extra</button>
+                            <button type="button" class="btn btn--primary" id="workflow-new-document">Novo documento</button>
+                            <button type="button" class="btn btn--save-highlight" id="workflow-save-flow">Salvar fluxo</button>
+                        </div>
+                    </div>
+
+                    <div class="workflow__filters">
+                        <div class="workflow__field">
+                            <label for="workflow-model" class="workflow__label">Modelo do documento</label>
+                            <select id="workflow-model" class="workflow__select"></select>
+                        </div>
+                        <div class="workflow__field">
+                            <label for="workflow-my-step" class="workflow__label">Minha caixa</label>
+                            <select id="workflow-my-step" class="workflow__select"></select>
+                        </div>
+                        <label class="workflow__focus">
+                            <input type="checkbox" id="workflow-focus-mode" checked>
+                            <span>Mostrar somente minha caixa</span>
+                        </label>
+                    </div>
+
+                    <div class="workflow__board" id="workflow-board"></div>
+
+                    <div class="workflow__saved">
+                        <div class="workflow__section-title">Fluxos salvos</div>
+                        <p class="workflow__section-subtitle">Salve uma configuração de fluxo por modelo para reutilizar depois.</p>
+                        <div id="workflow-saved-list" class="workflow__saved-list"></div>
+                    </div>
+
+                    <div class="workflow__editor">
+                        <div class="workflow__library">
+                            <div class="workflow__section-title">Cláusulas do modelo</div>
+                            <p class="workflow__section-subtitle">Escolha cláusulas prontas e preencha apenas os campos necessários.</p>
+                            <div id="workflow-clause-library" class="workflow__library-list"></div>
+                        </div>
+
+                        <div class="workflow__document-builder">
+                            <div class="workflow__section-title">Documento padronizado</div>
+                            <p class="workflow__section-subtitle">As cláusulas são montadas por formulário, sem edição manual do texto.</p>
+
+                            <div class="workflow__selected" id="workflow-selected-clauses"></div>
+
+                            <div class="workflow__form" id="workflow-clause-form"></div>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <section class="page" data-view="assinatura-digital">
@@ -307,6 +359,50 @@
                 <div class="modal-actions">
                     <button type="button" class="modal-btn modal-btn--cancel" id="cancel-folder-btn">Cancelar</button>
                     <button type="button" class="modal-btn modal-btn--create" id="create-folder-btn">Criar</button>
+                </div>
+            </div>
+        </div>
+
+        <!--========== WORKFLOW MODALS ==========-->
+        <div class="modal-overlay is-hidden" id="workflow-new-document-modal">
+            <div class="modal-container">
+                <h2 class="modal-title">Novo documento</h2>
+                <input type="text" class="modal-input" id="workflow-document-input" placeholder="Nome do documento" />
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn modal-btn--cancel" id="workflow-document-cancel">Cancelar</button>
+                    <button type="button" class="modal-btn modal-btn--create" id="workflow-document-create">Criar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay is-hidden" id="workflow-extra-stage-modal">
+            <div class="modal-container">
+                <h2 class="modal-title">Adicionar etapa extra</h2>
+                <div class="modal-form">
+                    <div class="modal-field">
+                        <label class="modal-label">Nome da etapa</label>
+                        <input type="text" class="modal-input" id="workflow-stage-name" placeholder="Ex: Due Diligence" />
+                    </div>
+                    <div class="modal-field">
+                        <label class="modal-label">Posição decimal</label>
+                        <input type="text" class="modal-input" id="workflow-stage-position" placeholder="Ex: 2.5 ou 2,5" />
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn modal-btn--cancel" id="workflow-stage-cancel">Cancelar</button>
+                    <button type="button" class="modal-btn modal-btn--create" id="workflow-stage-create">Adicionar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay is-hidden" id="workflow-save-flow-modal">
+            <div class="modal-container">
+                <h2 class="modal-title">Salvar fluxo</h2>
+                <input type="text" class="modal-input" id="workflow-save-input" placeholder="Nome do fluxo" />
+                <p class="modal-hint">Você está salvando a configuração atual com todas as etapas e cláusulas.</p>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn modal-btn--cancel" id="workflow-save-cancel">Cancelar</button>
+                    <button type="button" class="modal-btn modal-btn--create" id="workflow-save-create">Salvar</button>
                 </div>
             </div>
         </div>

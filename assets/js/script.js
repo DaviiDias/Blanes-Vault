@@ -1169,3 +1169,1024 @@ function setupNewFolderModal() {
 }
 
 setupNewFolderModal()
+
+/*==================== FLUXO DE TRABALHO ====================*/
+const workflowDefaultFlow = [
+    { id: 1, nome: 'Solicitação / Início' },
+    { id: 2, nome: 'Elaboração / Edição' },
+    { id: 3, nome: 'Revisão Técnica / Validação' },
+    { id: 4, nome: 'Revisão Jurídica' },
+    { id: 5, nome: 'Aprovação Orçamentária' },
+    { id: 6, nome: 'Aprovação Gerencial' },
+    { id: 7, nome: 'Negociação / Ajustes' },
+    { id: 8, nome: 'Assinatura Digital' },
+    { id: 9, nome: 'Execução / Publicação' }
+]
+
+const workflowModels = {
+    'prestacao-servicos': { skip: [] },
+    franquia: { skip: [], extra: [{ pos: 2.1, nome: 'Due Diligence + COF' }] },
+    nda: { skip: [3, 5, 7] },
+    collab: { skip: [5] },
+    comodato: { skip: [7] },
+    'dist-internacional': { skip: [], extra: [{ pos: 2.1, nome: 'Due Diligence Internacional' }] },
+    empreitada: { skip: [] },
+    fornecimento: { skip: [7] },
+    'franquia-internacional': { skip: [], extra: [{ pos: 2.1, nome: 'Due Diligence Internacional' }] },
+    aditamento: { skip: [1, 3, 7] },
+    'compra-venda-equip': { skip: [] },
+    'locacao-equip': { skip: [] },
+    'locacao-imovel': { skip: [], extra: [{ pos: 2.1, nome: 'Vistoria' }] },
+    distrato: { skip: [1, 2, 3, 5, 7] },
+    rescisao: { skip: [1, 2, 3, 5, 7] },
+    'representacao-comercial': { skip: [] },
+    transporte: { skip: [4, 5] },
+    cessao: { skip: [3, 5, 7] },
+    influencers: { skip: [5] }
+}
+
+const workflowClauseCatalog = [
+    {
+        id: 'partes',
+        title: 'Qualificação das partes',
+        requiresForm: true,
+        fields: [
+            { name: 'contratante', label: 'Contratante', type: 'text', placeholder: 'Empresa contratante' },
+            { name: 'contratada', label: 'Contratada', type: 'text', placeholder: 'Empresa contratada' },
+            { name: 'representante', label: 'Representante legal', type: 'text', placeholder: 'Nome completo' }
+        ]
+    },
+    {
+        id: 'objeto-servico',
+        title: 'Objeto do contrato / tipo de serviço',
+        requiresForm: true,
+        fields: [
+            { name: 'tipoServico', label: 'Tipo de serviço', type: 'text', placeholder: 'Ex: Consultoria técnica' },
+            { name: 'descricao', label: 'Descrição resumida', type: 'textarea', placeholder: 'Escopo principal do serviço' }
+        ]
+    },
+    {
+        id: 'enderecos',
+        title: 'Endereços e dados de contato',
+        requiresForm: true,
+        fields: [
+            { name: 'enderecoContratante', label: 'Endereço contratante', type: 'text', placeholder: 'Rua, número, cidade' },
+            { name: 'enderecoContratada', label: 'Endereço contratada', type: 'text', placeholder: 'Rua, número, cidade' }
+        ]
+    },
+    {
+        id: 'vigencia',
+        title: 'Prazo de vigência e renovação',
+        requiresForm: true,
+        fields: [
+            { name: 'inicio', label: 'Início da vigência', type: 'date' },
+            { name: 'fim', label: 'Fim da vigência', type: 'date' },
+            { name: 'renovacao', label: 'Renovação automática', type: 'select', options: ['Sim', 'Não'] }
+        ]
+    },
+    {
+        id: 'confidencialidade',
+        title: 'Confidencialidade e sigilo',
+        requiresForm: false,
+        fields: []
+    },
+    {
+        id: 'assinatura',
+        title: 'Assinatura digital',
+        requiresForm: false,
+        fields: []
+    }
+]
+
+const workflowModelDefaultClauses = {
+    'prestacao-servicos': ['partes', 'objeto-servico', 'enderecos', 'vigencia', 'confidencialidade', 'assinatura'],
+    nda: ['partes', 'confidencialidade', 'assinatura'],
+    franquia: ['partes', 'objeto-servico', 'enderecos', 'vigencia', 'confidencialidade', 'assinatura'],
+    'locacao-imovel': ['partes', 'enderecos', 'vigencia', 'assinatura']
+}
+
+const workflowMockSeed = {
+    documentsByModel: {
+        'prestacao-servicos': [
+            {
+                id: 'doc-mock-ps-001',
+                nome: 'Contrato Prestação • ACME',
+                currentStep: 2,
+                updatedAt: '2026-02-21T10:00:00.000Z'
+            }
+        ],
+        nda: [
+            {
+                id: 'doc-mock-nda-001',
+                nome: 'NDA • Projeto Orion',
+                currentStep: 4,
+                updatedAt: '2026-02-20T14:15:00.000Z'
+            }
+        ]
+    },
+    savedFlows: [
+        {
+            id: 'saved-flow-mock-001',
+            model: 'prestacao-servicos',
+            name: 'Fluxo padrão Prestação (Mock)',
+            createdAt: '2026-02-18T09:00:00.000Z',
+            stages: [
+                { id: 1, nome: 'Solicitação / Início' },
+                { id: 2, nome: 'Elaboração / Edição' },
+                { id: 3, nome: 'Revisão Técnica / Validação' },
+                { id: 4, nome: 'Revisão Jurídica' },
+                { id: 5, nome: 'Aprovação Orçamentária' },
+                { id: 6, nome: 'Aprovação Gerencial' },
+                { id: 7, nome: 'Negociação / Ajustes' },
+                { id: 8, nome: 'Assinatura Digital' },
+                { id: 9, nome: 'Execução / Publicação' }
+            ],
+            customExtras: [],
+            clauses: [
+                { clauseId: 'partes', values: {} },
+                { clauseId: 'objeto-servico', values: {} },
+                { clauseId: 'assinatura', values: {} }
+            ]
+        }
+    ]
+}
+
+const workflowState = {
+    currentModel: 'prestacao-servicos',
+    focusStep: null,
+    focusOnlyMine: true,
+    customExtrasByModel: {},
+    documentsByModel: {},
+    selectedClausesByModel: {},
+    activeClauseByModel: {},
+    savedFlows: []
+}
+
+const workflowStorageKey = 'ged.workflow.savedFlows.v1'
+
+const workflowMockService = {
+    loadSavedFlows() {
+        try {
+            const rawValue = localStorage.getItem(workflowStorageKey)
+            if (!rawValue) {
+                return workflowMockSeed.savedFlows.map((flow) => ({ ...flow }))
+            }
+
+            const parsed = JSON.parse(rawValue)
+            return Array.isArray(parsed) ? parsed : []
+        } catch (error) {
+            return workflowMockSeed.savedFlows.map((flow) => ({ ...flow }))
+        }
+    },
+    saveSavedFlows(savedFlows) {
+        localStorage.setItem(workflowStorageKey, JSON.stringify(savedFlows))
+    },
+    loadInitialDocuments(modelKey) {
+        const documents = workflowMockSeed.documentsByModel[modelKey] || []
+        return documents.map((doc) => ({
+            ...doc,
+            updatedAt: doc.updatedAt ? new Date(doc.updatedAt) : new Date()
+        }))
+    }
+}
+
+const workflowRefs = {
+    modelSelect: null,
+    myStepSelect: null,
+    focusMode: null,
+    board: null,
+    library: null,
+    selectedClauses: null,
+    clauseForm: null,
+    addExtraButton: null,
+    addDocumentButton: null,
+    saveFlowButton: null,
+    savedList: null
+}
+
+function formatWorkflowModelLabel(modelKey) {
+    return modelKey
+        .split('-')
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ')
+}
+
+function formatStageNumber(value) {
+    return String(value).replace('.', ',')
+}
+
+function getWorkflowStagesForModel(modelKey) {
+    const config = workflowModels[modelKey] || { skip: [] }
+    const skipList = config.skip || []
+    const baseStages = workflowDefaultFlow
+        .filter((stage) => !skipList.includes(Math.floor(stage.id)))
+        .map((stage) => ({ id: Number(stage.id), nome: stage.nome }))
+
+    const staticExtras = (config.extra || []).map((extra) => ({ id: Number(extra.pos), nome: extra.nome }))
+    const customExtras = (workflowState.customExtrasByModel[modelKey] || []).map((extra) => ({ id: Number(extra.pos), nome: extra.nome }))
+
+    const stages = [...baseStages, ...staticExtras, ...customExtras]
+        .filter((stage) => Number.isFinite(stage.id))
+        .sort((a, b) => a.id - b.id)
+
+    return stages
+}
+
+function getWorkflowCurrentStages() {
+    return getWorkflowStagesForModel(workflowState.currentModel)
+}
+
+function ensureWorkflowModelState(modelKey) {
+    if (!workflowState.customExtrasByModel[modelKey]) {
+        workflowState.customExtrasByModel[modelKey] = []
+    }
+
+    if (!workflowState.documentsByModel[modelKey]) {
+        const seededDocuments = workflowMockService.loadInitialDocuments(modelKey)
+        if (seededDocuments.length) {
+            workflowState.documentsByModel[modelKey] = seededDocuments
+        } else {
+            const firstStage = getWorkflowStagesForModel(modelKey)[0]
+            workflowState.documentsByModel[modelKey] = firstStage ? [
+                {
+                    id: `doc-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+                    nome: `${formatWorkflowModelLabel(modelKey)} • Documento inicial`,
+                    currentStep: firstStage.id,
+                    updatedAt: new Date()
+                }
+            ] : []
+        }
+    }
+
+    if (!workflowState.selectedClausesByModel[modelKey]) {
+        const defaults = workflowModelDefaultClauses[modelKey] || ['partes', 'assinatura']
+        workflowState.selectedClausesByModel[modelKey] = defaults
+            .map((clauseId) => {
+                const clause = workflowClauseCatalog.find((item) => item.id === clauseId)
+                if (!clause) return null
+                return {
+                    clauseId,
+                    values: {}
+                }
+            })
+            .filter(Boolean)
+    }
+
+    if (!workflowState.activeClauseByModel[modelKey]) {
+        workflowState.activeClauseByModel[modelKey] = workflowState.selectedClausesByModel[modelKey][0]?.clauseId || null
+    }
+}
+
+function getWorkflowCurrentDocuments() {
+    return workflowState.documentsByModel[workflowState.currentModel] || []
+}
+
+function renderWorkflowModelOptions() {
+    const select = workflowRefs.modelSelect
+    if (!select) return
+
+    select.innerHTML = ''
+    Object.keys(workflowModels).forEach((modelKey) => {
+        const option = document.createElement('option')
+        option.value = modelKey
+        option.textContent = formatWorkflowModelLabel(modelKey)
+        if (modelKey === workflowState.currentModel) {
+            option.selected = true
+        }
+        select.appendChild(option)
+    })
+}
+
+function renderWorkflowStepOptions() {
+    const select = workflowRefs.myStepSelect
+    if (!select) return
+
+    const stages = getWorkflowCurrentStages()
+    if (!stages.length) {
+        select.innerHTML = ''
+        workflowState.focusStep = null
+        return
+    }
+
+    if (!stages.some((stage) => stage.id === workflowState.focusStep)) {
+        workflowState.focusStep = stages[0].id
+    }
+
+    select.innerHTML = ''
+    stages.forEach((stage) => {
+        const option = document.createElement('option')
+        option.value = String(stage.id)
+        option.textContent = `${formatStageNumber(stage.id)} - ${stage.nome}`
+        option.selected = stage.id === workflowState.focusStep
+        select.appendChild(option)
+    })
+}
+
+function moveWorkflowDocumentForward(documentId) {
+    const documents = getWorkflowCurrentDocuments()
+    const stages = getWorkflowCurrentStages()
+    const documentItem = documents.find((item) => item.id === documentId)
+
+    if (!documentItem || !stages.length) {
+        return
+    }
+
+    const currentIndex = stages.findIndex((stage) => stage.id === documentItem.currentStep)
+    if (currentIndex === -1) {
+        documentItem.currentStep = stages[0].id
+        documentItem.updatedAt = new Date()
+        return
+    }
+
+    const nextStage = stages[currentIndex + 1]
+    if (nextStage) {
+        documentItem.currentStep = nextStage.id
+        documentItem.updatedAt = new Date()
+    }
+}
+
+function renderWorkflowBoard() {
+    const board = workflowRefs.board
+    if (!board) return
+
+    const stages = getWorkflowCurrentStages()
+    const documents = getWorkflowCurrentDocuments()
+
+    let visibleStages = stages
+    if (workflowState.focusOnlyMine && workflowState.focusStep !== null) {
+        visibleStages = stages.filter((stage) => stage.id === workflowState.focusStep)
+    }
+
+    board.innerHTML = ''
+
+    visibleStages.forEach((stage) => {
+        const stageDocuments = documents.filter((doc) => doc.currentStep === stage.id)
+        const stageIndex = stages.findIndex((item) => item.id === stage.id)
+
+        const box = document.createElement('article')
+        box.className = 'workflow__box'
+        if (stage.id === workflowState.focusStep) {
+            box.classList.add('is-current')
+        }
+
+        const docsMarkup = stageDocuments.length
+            ? stageDocuments.map((doc) => {
+                const nextStage = stages[stageIndex + 1]
+                const moveLabel = nextStage ? `Mover para ${formatStageNumber(nextStage.id)}` : 'Armazenado'
+                const updatedAt = doc.updatedAt instanceof Date ? doc.updatedAt.toLocaleDateString('pt-BR') : '-'
+
+                return `
+                    <div class="workflow__doc">
+                        <p class="workflow__doc-name">${doc.nome}</p>
+                        <p class="workflow__doc-meta">Última atualização: ${updatedAt}</p>
+                        <button class="workflow__doc-move" data-move-doc="${doc.id}" ${nextStage ? '' : 'disabled'}>${moveLabel}</button>
+                    </div>
+                `
+            }).join('')
+            : '<p class="workflow__box-empty">Nenhum documento nesta caixa.</p>'
+
+        box.innerHTML = `
+            <div class="workflow__box-header">
+                <div>
+                    <div class="workflow__box-id">Caixa ${formatStageNumber(stage.id)}</div>
+                    <h3 class="workflow__box-name">${stage.nome}</h3>
+                </div>
+                <span class="workflow__box-counter">${stageDocuments.length}</span>
+            </div>
+            <div class="workflow__docs">${docsMarkup}</div>
+        `
+
+        board.appendChild(box)
+    })
+}
+
+function getCurrentModelSelectedClauses() {
+    return workflowState.selectedClausesByModel[workflowState.currentModel] || []
+}
+
+function renderWorkflowClauseLibrary() {
+    const library = workflowRefs.library
+    if (!library) return
+
+    const selected = new Set(getCurrentModelSelectedClauses().map((item) => item.clauseId))
+    library.innerHTML = ''
+
+    workflowClauseCatalog.forEach((clause) => {
+        const item = document.createElement('div')
+        item.className = 'workflow__clause-item'
+
+        const isSelected = selected.has(clause.id)
+        item.innerHTML = `
+            <p class="workflow__clause-item-title">${clause.title}</p>
+            <div class="workflow__clause-actions">
+                <button type="button" class="workflow__small-btn" data-add-clause="${clause.id}" ${isSelected ? 'disabled' : ''}>${isSelected ? 'Adicionada' : 'Adicionar'}</button>
+            </div>
+        `
+
+        library.appendChild(item)
+    })
+}
+
+function renderWorkflowSelectedClauses() {
+    const container = workflowRefs.selectedClauses
+    if (!container) return
+
+    const selectedClauses = getCurrentModelSelectedClauses()
+    if (!selectedClauses.length) {
+        container.innerHTML = '<p class="workflow__hint">Nenhuma cláusula selecionada para este modelo.</p>'
+        return
+    }
+
+    container.innerHTML = selectedClauses.map((selectedClause) => {
+        const clause = workflowClauseCatalog.find((item) => item.id === selectedClause.clauseId)
+        if (!clause) return ''
+
+        return `
+            <div class="workflow__clause-item">
+                <p class="workflow__clause-item-title">${clause.title}</p>
+                <div class="workflow__clause-actions">
+                    <button type="button" class="workflow__small-btn" data-edit-clause="${clause.id}">Preencher dados</button>
+                    <button type="button" class="workflow__small-btn" data-remove-clause="${clause.id}">Remover</button>
+                </div>
+            </div>
+        `
+    }).join('')
+}
+
+function renderWorkflowClauseForm() {
+    const formContainer = workflowRefs.clauseForm
+    if (!formContainer) return
+
+    const activeClauseId = workflowState.activeClauseByModel[workflowState.currentModel]
+    const selectedClause = getCurrentModelSelectedClauses().find((item) => item.clauseId === activeClauseId)
+    if (!selectedClause) {
+        formContainer.innerHTML = '<p class="workflow__hint">Selecione uma cláusula para preencher os metadados.</p>'
+        return
+    }
+
+    const clauseDefinition = workflowClauseCatalog.find((item) => item.id === selectedClause.clauseId)
+    if (!clauseDefinition) {
+        formContainer.innerHTML = ''
+        return
+    }
+
+    if (!clauseDefinition.requiresForm || !clauseDefinition.fields.length) {
+        formContainer.innerHTML = `
+            <div class="workflow__form-row">
+                <label>${clauseDefinition.title}</label>
+                <p class="workflow__hint">Esta cláusula é padrão e não exige formulário. Basta mantê-la no modelo.</p>
+            </div>
+        `
+        return
+    }
+
+    const fieldsHtml = clauseDefinition.fields.map((field) => {
+        const value = selectedClause.values[field.name] || ''
+
+        if (field.type === 'textarea') {
+            return `
+                <div class="workflow__form-row">
+                    <label for="clause-field-${field.name}">${field.label}</label>
+                    <textarea id="clause-field-${field.name}" data-clause-field="${field.name}" placeholder="${field.placeholder || ''}">${value}</textarea>
+                </div>
+            `
+        }
+
+        if (field.type === 'select') {
+            const options = (field.options || []).map((option) => `<option value="${option}" ${value === option ? 'selected' : ''}>${option}</option>`).join('')
+            return `
+                <div class="workflow__form-row">
+                    <label for="clause-field-${field.name}">${field.label}</label>
+                    <select id="clause-field-${field.name}" data-clause-field="${field.name}">
+                        <option value="">Selecione</option>
+                        ${options}
+                    </select>
+                </div>
+            `
+        }
+
+        return `
+            <div class="workflow__form-row">
+                <label for="clause-field-${field.name}">${field.label}</label>
+                <input id="clause-field-${field.name}" type="${field.type || 'text'}" data-clause-field="${field.name}" value="${value}" placeholder="${field.placeholder || ''}" />
+            </div>
+        `
+    }).join('')
+
+    formContainer.innerHTML = `
+        <div class="workflow__form-row">
+            <label>Cláusula ativa</label>
+            <strong>${clauseDefinition.title}</strong>
+        </div>
+        ${fieldsHtml}
+    `
+}
+
+function loadWorkflowSavedFlows() {
+    workflowState.savedFlows = workflowMockService.loadSavedFlows()
+}
+
+function persistWorkflowSavedFlows() {
+    workflowMockService.saveSavedFlows(workflowState.savedFlows)
+}
+
+function buildWorkflowSnapshot() {
+    const modelKey = workflowState.currentModel
+    const stages = getWorkflowStagesForModel(modelKey).map((stage) => ({ id: stage.id, nome: stage.nome }))
+    const clauses = getCurrentModelSelectedClauses().map((item) => ({
+        clauseId: item.clauseId,
+        values: { ...item.values }
+    }))
+    const customExtras = (workflowState.customExtrasByModel[modelKey] || []).map((item) => ({ ...item }))
+
+    return {
+        id: `saved-flow-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        model: modelKey,
+        name: '',
+        createdAt: new Date().toISOString(),
+        stages,
+        customExtras,
+        clauses
+    }
+}
+
+function renderWorkflowSavedFlows() {
+    const savedList = workflowRefs.savedList
+    if (!savedList) return
+
+    const modelSavedFlows = workflowState.savedFlows
+        .filter((flow) => flow.model === workflowState.currentModel)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+    if (!modelSavedFlows.length) {
+        savedList.innerHTML = '<p class="workflow__hint">Nenhum fluxo salvo para este modelo.</p>'
+        return
+    }
+
+    savedList.innerHTML = modelSavedFlows.map((flow) => {
+        const created = new Date(flow.createdAt)
+        const createdLabel = Number.isNaN(created.getTime()) ? '-' : created.toLocaleString('pt-BR')
+        const stagesCount = Array.isArray(flow.stages) ? flow.stages.length : 0
+
+        return `
+            <div class="workflow__saved-item">
+                <div class="workflow__saved-info">
+                    <p class="workflow__saved-name">${flow.name}</p>
+                    <p class="workflow__saved-meta">${stagesCount} caixas • Salvo em ${createdLabel}</p>
+                </div>
+                <div class="workflow__saved-actions">
+                    <button type="button" class="workflow__small-btn" data-load-flow="${flow.id}">Carregar</button>
+                    <button type="button" class="workflow__small-btn" data-delete-flow="${flow.id}">Excluir</button>
+                </div>
+            </div>
+        `
+    }).join('')
+}
+
+function saveCurrentWorkflowSnapshot() {
+    const modal = document.getElementById('workflow-save-flow-modal')
+    const input = document.getElementById('workflow-save-input')
+    
+    if (!modal || !input) return
+    
+    const defaultName = `Fluxo ${formatWorkflowModelLabel(workflowState.currentModel)} ${new Date().toLocaleDateString('pt-BR')}`
+    input.value = defaultName
+    modal.classList.remove('is-hidden')
+    input.focus()
+    input.select()
+}
+
+function closeWorkflowSaveFlowModal() {
+    const modal = document.getElementById('workflow-save-flow-modal')
+    if (modal) {
+        modal.classList.add('is-hidden')
+    }
+}
+
+function submitWorkflowSaveFlow() {
+    const input = document.getElementById('workflow-save-input')
+    
+    if (!input) return
+    
+    const flowName = input.value.trim()
+    if (!flowName) {
+        window.alert('Por favor, insira um nome para o fluxo.')
+        return
+    }
+
+    const snapshot = buildWorkflowSnapshot()
+    snapshot.name = flowName
+
+    workflowState.savedFlows.unshift(snapshot)
+    persistWorkflowSavedFlows()
+    renderWorkflowSavedFlows()
+    closeWorkflowSaveFlowModal()
+}
+
+function loadSavedWorkflowById(flowId) {
+    const flow = workflowState.savedFlows.find((item) => item.id === flowId)
+    if (!flow) return
+
+    workflowState.currentModel = flow.model
+    workflowState.customExtrasByModel[flow.model] = Array.isArray(flow.customExtras) ? flow.customExtras.map((item) => ({ ...item })) : []
+    workflowState.selectedClausesByModel[flow.model] = Array.isArray(flow.clauses)
+        ? flow.clauses.map((item) => ({ clauseId: item.clauseId, values: { ...(item.values || {}) } }))
+        : []
+
+    ensureWorkflowModelState(flow.model)
+    const stages = getWorkflowCurrentStages()
+    workflowState.focusStep = stages[0]?.id || null
+    workflowState.activeClauseByModel[flow.model] = workflowState.selectedClausesByModel[flow.model][0]?.clauseId || null
+
+    renderWorkflowAll()
+}
+
+function deleteSavedWorkflowById(flowId) {
+    const index = workflowState.savedFlows.findIndex((item) => item.id === flowId)
+    if (index === -1) return
+
+    workflowState.savedFlows.splice(index, 1)
+    persistWorkflowSavedFlows()
+    renderWorkflowSavedFlows()
+}
+
+function renderWorkflowAll() {
+    renderWorkflowModelOptions()
+    renderWorkflowStepOptions()
+    renderWorkflowBoard()
+    renderWorkflowClauseLibrary()
+    renderWorkflowSelectedClauses()
+    renderWorkflowClauseForm()
+    renderWorkflowSavedFlows()
+}
+
+function addWorkflowClause(clauseId) {
+    const selectedClauses = getCurrentModelSelectedClauses()
+    if (selectedClauses.some((item) => item.clauseId === clauseId)) {
+        return
+    }
+
+    selectedClauses.push({
+        clauseId,
+        values: {}
+    })
+
+    workflowState.activeClauseByModel[workflowState.currentModel] = clauseId
+}
+
+function removeWorkflowClause(clauseId) {
+    const selectedClauses = getCurrentModelSelectedClauses()
+    const index = selectedClauses.findIndex((item) => item.clauseId === clauseId)
+    if (index === -1) return
+
+    selectedClauses.splice(index, 1)
+
+    if (workflowState.activeClauseByModel[workflowState.currentModel] === clauseId) {
+        workflowState.activeClauseByModel[workflowState.currentModel] = selectedClauses[0]?.clauseId || null
+    }
+}
+
+function createWorkflowDocument() {
+    const modal = document.getElementById('workflow-new-document-modal')
+    const input = document.getElementById('workflow-document-input')
+    
+    if (!modal || !input) return
+    
+    input.value = ''
+    modal.classList.remove('is-hidden')
+    input.focus()
+}
+
+function closeWorkflowNewDocumentModal() {
+    const modal = document.getElementById('workflow-new-document-modal')
+    if (modal) {
+        modal.classList.add('is-hidden')
+    }
+}
+
+function submitWorkflowNewDocument() {
+    const input = document.getElementById('workflow-document-input')
+    const stages = getWorkflowCurrentStages()
+    
+    if (!input || !stages.length) {
+        return
+    }
+
+    const safeName = input.value.trim() || `Novo ${formatWorkflowModelLabel(workflowState.currentModel)}`
+    const documents = getWorkflowCurrentDocuments()
+    
+    documents.unshift({
+        id: `doc-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        nome: safeName,
+        currentStep: stages[0].id,
+        updatedAt: new Date()
+    })
+    
+    closeWorkflowNewDocumentModal()
+    renderWorkflowBoard()
+}
+
+function addWorkflowExtraStep() {
+    const modal = document.getElementById('workflow-extra-stage-modal')
+    const nameInput = document.getElementById('workflow-stage-name')
+    const posInput = document.getElementById('workflow-stage-position')
+    
+    if (!modal || !nameInput || !posInput) return
+    
+    nameInput.value = ''
+    posInput.value = ''
+    modal.classList.remove('is-hidden')
+    nameInput.focus()
+}
+
+function closeWorkflowExtraStageModal() {
+    const modal = document.getElementById('workflow-extra-stage-modal')
+    if (modal) {
+        modal.classList.add('is-hidden')
+    }
+}
+
+function submitWorkflowExtraStage() {
+    const nameInput = document.getElementById('workflow-stage-name')
+    const posInput = document.getElementById('workflow-stage-position')
+    
+    if (!nameInput || !posInput) return
+    
+    const cleanName = nameInput.value.trim()
+    if (!cleanName) {
+        window.alert('Por favor, insira um nome para a etapa.')
+        return
+    }
+
+    const normalized = posInput.value.replace(',', '.').trim()
+    const decimalValue = Number(normalized)
+
+    if (!Number.isFinite(decimalValue)) {
+        window.alert('Posição inválida. Use um número como 2.5')
+        return
+    }
+
+    const extras = workflowState.customExtrasByModel[workflowState.currentModel]
+    const duplicated = extras.some((extra) => Number(extra.pos) === decimalValue)
+    if (duplicated) {
+        window.alert('Já existe uma etapa nessa posição para este modelo.')
+        return
+    }
+
+    extras.push({ pos: decimalValue, nome: cleanName })
+
+    const stages = getWorkflowCurrentStages()
+    if (!stages.some((stage) => stage.id === workflowState.focusStep)) {
+        workflowState.focusStep = stages[0]?.id || null
+    }
+    
+    closeWorkflowExtraStageModal()
+    renderWorkflowStepOptions()
+    renderWorkflowBoard()
+}
+
+function bindWorkflowEvents() {
+    if (workflowRefs.modelSelect) {
+        workflowRefs.modelSelect.addEventListener('change', (event) => {
+            workflowState.currentModel = event.target.value
+            ensureWorkflowModelState(workflowState.currentModel)
+
+            const currentStages = getWorkflowCurrentStages()
+            workflowState.focusStep = currentStages[0]?.id || null
+
+            renderWorkflowAll()
+        })
+    }
+
+    if (workflowRefs.myStepSelect) {
+        workflowRefs.myStepSelect.addEventListener('change', (event) => {
+            workflowState.focusStep = Number(event.target.value)
+            renderWorkflowBoard()
+        })
+    }
+
+    if (workflowRefs.focusMode) {
+        workflowRefs.focusMode.addEventListener('change', (event) => {
+            workflowState.focusOnlyMine = event.target.checked
+            renderWorkflowBoard()
+        })
+    }
+
+    if (workflowRefs.addDocumentButton) {
+        workflowRefs.addDocumentButton.addEventListener('click', () => {
+            createWorkflowDocument()
+            renderWorkflowBoard()
+        })
+    }
+
+    if (workflowRefs.addExtraButton) {
+        workflowRefs.addExtraButton.addEventListener('click', () => {
+            addWorkflowExtraStep()
+            renderWorkflowStepOptions()
+            renderWorkflowBoard()
+        })
+    }
+
+    if (workflowRefs.saveFlowButton) {
+        workflowRefs.saveFlowButton.addEventListener('click', () => {
+            saveCurrentWorkflowSnapshot()
+        })
+    }
+
+    if (workflowRefs.board) {
+        workflowRefs.board.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-move-doc]')
+            if (!button) return
+
+            const documentId = button.getAttribute('data-move-doc')
+            if (!documentId) return
+
+            moveWorkflowDocumentForward(documentId)
+            renderWorkflowBoard()
+        })
+    }
+
+    if (workflowRefs.library) {
+        workflowRefs.library.addEventListener('click', (event) => {
+            const addButton = event.target.closest('[data-add-clause]')
+            if (!addButton) return
+
+            const clauseId = addButton.getAttribute('data-add-clause')
+            if (!clauseId) return
+
+            addWorkflowClause(clauseId)
+            renderWorkflowClauseLibrary()
+            renderWorkflowSelectedClauses()
+            renderWorkflowClauseForm()
+        })
+    }
+
+    if (workflowRefs.selectedClauses) {
+        workflowRefs.selectedClauses.addEventListener('click', (event) => {
+            const editButton = event.target.closest('[data-edit-clause]')
+            if (editButton) {
+                const clauseId = editButton.getAttribute('data-edit-clause')
+                if (clauseId) {
+                    workflowState.activeClauseByModel[workflowState.currentModel] = clauseId
+                    renderWorkflowClauseForm()
+                }
+                return
+            }
+
+            const removeButton = event.target.closest('[data-remove-clause]')
+            if (removeButton) {
+                const clauseId = removeButton.getAttribute('data-remove-clause')
+                if (clauseId) {
+                    removeWorkflowClause(clauseId)
+                    renderWorkflowClauseLibrary()
+                    renderWorkflowSelectedClauses()
+                    renderWorkflowClauseForm()
+                }
+            }
+        })
+    }
+
+    if (workflowRefs.clauseForm) {
+        workflowRefs.clauseForm.addEventListener('input', (event) => {
+            const field = event.target.closest('[data-clause-field]')
+            if (!field) return
+
+            const fieldName = field.getAttribute('data-clause-field')
+            if (!fieldName) return
+
+            const selectedClauses = getCurrentModelSelectedClauses()
+            const activeClauseId = workflowState.activeClauseByModel[workflowState.currentModel]
+            const clause = selectedClauses.find((item) => item.clauseId === activeClauseId)
+
+            if (!clause) return
+            clause.values[fieldName] = field.value
+        })
+    }
+
+    if (workflowRefs.savedList) {
+        workflowRefs.savedList.addEventListener('click', (event) => {
+            const loadButton = event.target.closest('[data-load-flow]')
+            if (loadButton) {
+                const flowId = loadButton.getAttribute('data-load-flow')
+                if (flowId) {
+                    loadSavedWorkflowById(flowId)
+                }
+                return
+            }
+
+            const deleteButton = event.target.closest('[data-delete-flow]')
+            if (deleteButton) {
+                const flowId = deleteButton.getAttribute('data-delete-flow')
+                if (flowId) {
+                    deleteSavedWorkflowById(flowId)
+                }
+            }
+        })
+    }
+
+    const newDocModal = document.getElementById('workflow-new-document-modal')
+    if (newDocModal) {
+        const createBtn = document.getElementById('workflow-document-create')
+        const cancelBtn = document.getElementById('workflow-document-cancel')
+        const input = document.getElementById('workflow-document-input')
+
+        if (createBtn) {
+            createBtn.addEventListener('click', submitWorkflowNewDocument)
+        }
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', closeWorkflowNewDocumentModal)
+        }
+        if (input) {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') submitWorkflowNewDocument()
+                else if (e.key === 'Escape') closeWorkflowNewDocumentModal()
+            })
+        }
+        newDocModal.addEventListener('click', (e) => {
+            if (e.target === newDocModal) closeWorkflowNewDocumentModal()
+        })
+    }
+
+    const extraStageModal = document.getElementById('workflow-extra-stage-modal')
+    if (extraStageModal) {
+        const createBtn = document.getElementById('workflow-stage-create')
+        const cancelBtn = document.getElementById('workflow-stage-cancel')
+        const nameInput = document.getElementById('workflow-stage-name')
+        const posInput = document.getElementById('workflow-stage-position')
+
+        if (createBtn) {
+            createBtn.addEventListener('click', submitWorkflowExtraStage)
+        }
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', closeWorkflowExtraStageModal)
+        }
+        if (nameInput) {
+            nameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') posInput?.focus()
+                else if (e.key === 'Escape') closeWorkflowExtraStageModal()
+            })
+        }
+        if (posInput) {
+            posInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') submitWorkflowExtraStage()
+                else if (e.key === 'Escape') closeWorkflowExtraStageModal()
+            })
+        }
+        extraStageModal.addEventListener('click', (e) => {
+            if (e.target === extraStageModal) closeWorkflowExtraStageModal()
+        })
+    }
+
+    const saveFlowModal = document.getElementById('workflow-save-flow-modal')
+    if (saveFlowModal) {
+        const createBtn = document.getElementById('workflow-save-create')
+        const cancelBtn = document.getElementById('workflow-save-cancel')
+        const input = document.getElementById('workflow-save-input')
+
+        if (createBtn) {
+            createBtn.addEventListener('click', submitWorkflowSaveFlow)
+        }
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', closeWorkflowSaveFlowModal)
+        }
+        if (input) {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') submitWorkflowSaveFlow()
+                else if (e.key === 'Escape') closeWorkflowSaveFlowModal()
+            })
+        }
+        saveFlowModal.addEventListener('click', (e) => {
+            if (e.target === saveFlowModal) closeWorkflowSaveFlowModal()
+        })
+    }
+}
+
+function initWorkflowEngine() {
+    workflowRefs.modelSelect = document.getElementById('workflow-model')
+    workflowRefs.myStepSelect = document.getElementById('workflow-my-step')
+    workflowRefs.focusMode = document.getElementById('workflow-focus-mode')
+    workflowRefs.board = document.getElementById('workflow-board')
+    workflowRefs.library = document.getElementById('workflow-clause-library')
+    workflowRefs.selectedClauses = document.getElementById('workflow-selected-clauses')
+    workflowRefs.clauseForm = document.getElementById('workflow-clause-form')
+    workflowRefs.addExtraButton = document.getElementById('workflow-new-extra')
+    workflowRefs.addDocumentButton = document.getElementById('workflow-new-document')
+    workflowRefs.saveFlowButton = document.getElementById('workflow-save-flow')
+    workflowRefs.savedList = document.getElementById('workflow-saved-list')
+
+    if (!workflowRefs.modelSelect || !workflowRefs.board) {
+        return
+    }
+
+    loadWorkflowSavedFlows()
+    ensureWorkflowModelState(workflowState.currentModel)
+    workflowState.focusStep = getWorkflowCurrentStages()[0]?.id || null
+    if (workflowRefs.focusMode) {
+        workflowRefs.focusMode.checked = workflowState.focusOnlyMine
+    }
+
+    renderWorkflowAll()
+    bindWorkflowEvents()
+}
+
+initWorkflowEngine()
