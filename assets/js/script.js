@@ -1319,6 +1319,8 @@ const workflowState = {
     documentsByModel: {},
     selectedClausesByModel: {},
     activeClauseByModel: {},
+    clauseFormEnabledByModel: {},
+    clauseFormNoticeByModel: {},
     savedFlows: []
 }
 
@@ -1358,6 +1360,7 @@ const workflowRefs = {
     library: null,
     selectedClauses: null,
     clauseForm: null,
+    documentPreview: null,
     addExtraButton: null,
     addDocumentButton: null,
     saveFlowButton: null,
@@ -1435,6 +1438,22 @@ function ensureWorkflowModelState(modelKey) {
     if (!workflowState.activeClauseByModel[modelKey]) {
         workflowState.activeClauseByModel[modelKey] = workflowState.selectedClausesByModel[modelKey][0]?.clauseId || null
     }
+
+    if (typeof workflowState.clauseFormEnabledByModel[modelKey] !== 'boolean') {
+        workflowState.clauseFormEnabledByModel[modelKey] = false
+    }
+
+    if (typeof workflowState.clauseFormNoticeByModel[modelKey] !== 'string') {
+        workflowState.clauseFormNoticeByModel[modelKey] = ''
+    }
+}
+
+function setWorkflowClauseFormEnabled(enabled) {
+    workflowState.clauseFormEnabledByModel[workflowState.currentModel] = Boolean(enabled)
+}
+
+function setWorkflowClauseFormNotice(message) {
+    workflowState.clauseFormNoticeByModel[workflowState.currentModel] = String(message || '')
 }
 
 function getWorkflowCurrentDocuments() {
@@ -1591,6 +1610,8 @@ function renderWorkflowSelectedClauses() {
     const container = workflowRefs.selectedClauses
     if (!container) return
 
+    const activeClauseId = workflowState.activeClauseByModel[workflowState.currentModel]
+    const isFormEnabled = Boolean(workflowState.clauseFormEnabledByModel[workflowState.currentModel])
     const selectedClauses = getCurrentModelSelectedClauses()
     if (!selectedClauses.length) {
         container.innerHTML = '<p class="workflow__hint">Nenhuma cláusula selecionada para este modelo.</p>'
@@ -1600,12 +1621,15 @@ function renderWorkflowSelectedClauses() {
     container.innerHTML = selectedClauses.map((selectedClause) => {
         const clause = workflowClauseCatalog.find((item) => item.id === selectedClause.clauseId)
         if (!clause) return ''
+        const isActive = isFormEnabled && clause.id === activeClauseId
+        const editButtonClass = `workflow__small-btn${isActive ? ' workflow__small-btn--active' : ''}`
+        const editButtonLabel = isActive ? 'Preenchendo dados' : 'Preencher dados'
 
         return `
             <div class="workflow__clause-item">
                 <p class="workflow__clause-item-title">${clause.title}</p>
                 <div class="workflow__clause-actions">
-                    <button type="button" class="workflow__small-btn" data-edit-clause="${clause.id}">Preencher dados</button>
+                    <button type="button" class="${editButtonClass}" data-edit-clause="${clause.id}">${editButtonLabel}</button>
                     <button type="button" class="workflow__small-btn" data-remove-clause="${clause.id}">Remover</button>
                 </div>
             </div>
@@ -1616,6 +1640,16 @@ function renderWorkflowSelectedClauses() {
 function renderWorkflowClauseForm() {
     const formContainer = workflowRefs.clauseForm
     if (!formContainer) return
+
+    const isEnabled = Boolean(workflowState.clauseFormEnabledByModel[workflowState.currentModel])
+    if (!isEnabled) {
+        formContainer.classList.add('workflow__form--disabled')
+        const notice = workflowState.clauseFormNoticeByModel[workflowState.currentModel] || 'Formulário desativado. Clique em "Preencher dados" para habilitar a edição da cláusula.'
+        formContainer.innerHTML = `<p class="workflow__hint">${notice}</p>`
+        return
+    }
+
+    formContainer.classList.remove('workflow__form--disabled')
 
     const activeClauseId = workflowState.activeClauseByModel[workflowState.currentModel]
     const selectedClause = getCurrentModelSelectedClauses().find((item) => item.clauseId === activeClauseId)
@@ -1635,6 +1669,10 @@ function renderWorkflowClauseForm() {
             <div class="workflow__form-row">
                 <label>${clauseDefinition.title}</label>
                 <p class="workflow__hint">Esta cláusula é padrão e não exige formulário. Basta mantê-la no modelo.</p>
+            </div>
+            <div class="workflow__form-actions">
+                <button type="button" class="workflow__form-save" data-save-clause>Salvar dados da cláusula</button>
+                <p class="workflow__form-status">Clique em salvar para concluir esta etapa.</p>
             </div>
         `
         return
@@ -1679,6 +1717,65 @@ function renderWorkflowClauseForm() {
             <strong>${clauseDefinition.title}</strong>
         </div>
         ${fieldsHtml}
+        <div class="workflow__form-actions">
+            <button type="button" class="workflow__form-save" data-save-clause>Salvar dados da cláusula</button>
+            <p class="workflow__form-status">Após salvar, você pode seguir para a próxima cláusula.</p>
+        </div>
+    `
+}
+
+function getWorkflowDefaultPreviewText(clauseId) {
+    if (clauseId === 'confidencialidade') {
+        return 'As partes se comprometem a manter sigilo sobre todas as informações confidenciais relacionadas a este contrato.'
+    }
+
+    if (clauseId === 'assinatura') {
+        return 'As partes concordam com assinatura digital deste instrumento, com validade jurídica e integridade do documento.'
+    }
+
+    return 'Cláusula adicionada ao documento. Preencha os dados para detalhar este trecho.'
+}
+
+function renderWorkflowDocumentPreview() {
+    const previewContainer = workflowRefs.documentPreview
+    if (!previewContainer) return
+
+    const selectedClauses = getCurrentModelSelectedClauses()
+    if (!selectedClauses.length) {
+        previewContainer.innerHTML = '<p class="workflow__preview-empty">Nenhuma cláusula selecionada para pré-visualização.</p>'
+        return
+    }
+
+    const sections = selectedClauses.map((selectedClause) => {
+        const clauseDefinition = workflowClauseCatalog.find((item) => item.id === selectedClause.clauseId)
+        if (!clauseDefinition) return ''
+
+        if (!clauseDefinition.requiresForm || !clauseDefinition.fields.length) {
+            return `
+                <div class="workflow__preview-section">
+                    <strong>${clauseDefinition.title}</strong>
+                    <p class="workflow__preview-line">${getWorkflowDefaultPreviewText(clauseDefinition.id)}</p>
+                </div>
+            `
+        }
+
+        const fieldLines = clauseDefinition.fields.map((field) => {
+            const rawValue = selectedClause.values[field.name]
+            const value = rawValue && String(rawValue).trim() ? String(rawValue).trim() : 'Nao informado'
+            return `<p class="workflow__preview-line"><strong>${field.label}:</strong> ${value}</p>`
+        }).join('')
+
+        return `
+            <div class="workflow__preview-section">
+                <strong>${clauseDefinition.title}</strong>
+                ${fieldLines}
+            </div>
+        `
+    }).join('')
+
+    previewContainer.innerHTML = `
+        <p class="workflow__preview-title">Pré-visualização do documento</p>
+        ${sections}
     `
 }
 
@@ -1797,6 +1894,8 @@ function loadSavedWorkflowById(flowId) {
     const stages = getWorkflowCurrentStages()
     workflowState.focusStep = stages[0]?.id || null
     workflowState.activeClauseByModel[flow.model] = workflowState.selectedClausesByModel[flow.model][0]?.clauseId || null
+    workflowState.clauseFormEnabledByModel[flow.model] = false
+    workflowState.clauseFormNoticeByModel[flow.model] = ''
 
     renderWorkflowAll()
 }
@@ -1817,6 +1916,7 @@ function renderWorkflowAll() {
     renderWorkflowClauseLibrary()
     renderWorkflowSelectedClauses()
     renderWorkflowClauseForm()
+    renderWorkflowDocumentPreview()
     renderWorkflowSavedFlows()
 }
 
@@ -1832,6 +1932,8 @@ function addWorkflowClause(clauseId) {
     })
 
     workflowState.activeClauseByModel[workflowState.currentModel] = clauseId
+    setWorkflowClauseFormNotice('')
+    setWorkflowClauseFormEnabled(false)
 }
 
 function removeWorkflowClause(clauseId) {
@@ -1843,7 +1945,22 @@ function removeWorkflowClause(clauseId) {
 
     if (workflowState.activeClauseByModel[workflowState.currentModel] === clauseId) {
         workflowState.activeClauseByModel[workflowState.currentModel] = selectedClauses[0]?.clauseId || null
+        setWorkflowClauseFormNotice('Cláusula removida. Clique em "Preencher dados" para editar a próxima.')
+        setWorkflowClauseFormEnabled(false)
     }
+}
+
+function saveWorkflowActiveClause() {
+    const selectedClauses = getCurrentModelSelectedClauses()
+    const activeClauseId = workflowState.activeClauseByModel[workflowState.currentModel]
+    const clause = selectedClauses.find((item) => item.clauseId === activeClauseId)
+    if (!clause) return
+
+    setWorkflowClauseFormNotice('Dados da cláusula salvos. Agora você pode clicar em "Preencher dados" na próxima cláusula.')
+    setWorkflowClauseFormEnabled(false)
+    renderWorkflowSelectedClauses()
+    renderWorkflowClauseForm()
+    renderWorkflowDocumentPreview()
 }
 
 function createWorkflowDocument() {
@@ -1950,6 +2067,8 @@ function bindWorkflowEvents() {
         workflowRefs.modelSelect.addEventListener('change', (event) => {
             workflowState.currentModel = event.target.value
             ensureWorkflowModelState(workflowState.currentModel)
+            setWorkflowClauseFormNotice('')
+            setWorkflowClauseFormEnabled(false)
 
             const currentStages = getWorkflowCurrentStages()
             workflowState.focusStep = currentStages[0]?.id || null
@@ -2018,6 +2137,7 @@ function bindWorkflowEvents() {
             renderWorkflowClauseLibrary()
             renderWorkflowSelectedClauses()
             renderWorkflowClauseForm()
+            renderWorkflowDocumentPreview()
         })
     }
 
@@ -2028,6 +2148,9 @@ function bindWorkflowEvents() {
                 const clauseId = editButton.getAttribute('data-edit-clause')
                 if (clauseId) {
                     workflowState.activeClauseByModel[workflowState.currentModel] = clauseId
+                    setWorkflowClauseFormNotice('')
+                    setWorkflowClauseFormEnabled(true)
+                    renderWorkflowSelectedClauses()
                     renderWorkflowClauseForm()
                 }
                 return
@@ -2041,12 +2164,20 @@ function bindWorkflowEvents() {
                     renderWorkflowClauseLibrary()
                     renderWorkflowSelectedClauses()
                     renderWorkflowClauseForm()
+                    renderWorkflowDocumentPreview()
                 }
             }
         })
     }
 
     if (workflowRefs.clauseForm) {
+        workflowRefs.clauseForm.addEventListener('click', (event) => {
+            const saveButton = event.target.closest('[data-save-clause]')
+            if (!saveButton) return
+
+            saveWorkflowActiveClause()
+        })
+
         workflowRefs.clauseForm.addEventListener('input', (event) => {
             const field = event.target.closest('[data-clause-field]')
             if (!field) return
@@ -2060,6 +2191,7 @@ function bindWorkflowEvents() {
 
             if (!clause) return
             clause.values[fieldName] = field.value
+            renderWorkflowDocumentPreview()
         })
     }
 
@@ -2169,6 +2301,7 @@ function initWorkflowEngine() {
     workflowRefs.library = document.getElementById('workflow-clause-library')
     workflowRefs.selectedClauses = document.getElementById('workflow-selected-clauses')
     workflowRefs.clauseForm = document.getElementById('workflow-clause-form')
+    workflowRefs.documentPreview = document.getElementById('workflow-document-preview')
     workflowRefs.addExtraButton = document.getElementById('workflow-new-extra')
     workflowRefs.addDocumentButton = document.getElementById('workflow-new-document')
     workflowRefs.saveFlowButton = document.getElementById('workflow-save-flow')
