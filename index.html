@@ -17,9 +17,39 @@
         <!--========== HEADER ==========-->
         <header class="header">
             <div class="header__container">
-                <img src="assets/img/perfil.jpg" alt="" class="header__img">
+                <div class="header__profile" id="header-profile">
+                    <button type="button" class="header__profile-trigger" id="header-profile-trigger" aria-expanded="false" aria-controls="header-user-menu" aria-label="Abrir menu do usuario">
+                        <span class="header__user-name">Chewie</span>
+                        <img src="assets/img/perfil.jpg" alt="Foto do usuario" class="header__img">
+                        <i class='bx bx-chevron-down header__profile-arrow'></i>
+                    </button>
 
-                <a href="#" class="header__logo">BaseDoc</a>
+                    <div class="header__user-menu" id="header-user-menu" role="menu" aria-label="User navigation menu">
+                        <a href="#" class="header__user-item" role="menuitem">
+                            <i class='bx bx-user-circle'></i>
+                            <span>Meu perfil</span>
+                        </a>
+                        <a href="#" class="header__user-item" role="menuitem">
+                            <i class='bx bx-cog'></i>
+                            <span>Configuracoes da conta</span>
+                        </a>
+                        <a href="#" class="header__user-item" role="menuitem">
+                            <i class='bx bx-shield-quarter'></i>
+                            <span>Privacidade e seguranca</span>
+                        </a>
+                        <button type="button" class="header__user-item header__user-item--disabled" role="menuitem" aria-disabled="true">
+                            <i class='bx bx-moon'></i>
+                            <span>Dark mode</span>
+                            <span class="header__user-chip">Em breve</span>
+                        </button>
+                        <a href="#" class="header__user-item" role="menuitem">
+                            <i class='bx bx-log-out'></i>
+                            <span>Sair</span>
+                        </a>
+                    </div>
+                </div>
+
+                <a href="#" class="header__logo">Blanes Vault</a>
     
                 <div class="header__search">
                     <input type="search" placeholder="Search" class="header__input">
@@ -37,8 +67,8 @@
             <nav class="nav__container">
                 <div>
                     <a href="#" class="nav__link nav__logo">
-                        <img src="assets/img/IconTeste.jpeg" alt="Icone BaseDoc" class="nav__icon nav__icon--image" />
-                        <span class="nav__logo-name">BaseDoc</span>
+                        <img src="assets/img/cofre-de-banco.png" alt="Icone BaseDoc" class="nav__icon nav__icon--image" />
+                        <span class="nav__logo-name">Vault</span>
                     </a>
     
                     <div class="nav__list">

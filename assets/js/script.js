@@ -15,9 +15,71 @@ const showMenu = (headerToggle, navbarId) =>{
 }
 showMenu('header-toggle','navbar')
 
+function setupHeaderUserMenu() {
+    const profile = document.getElementById('header-profile')
+    const trigger = document.getElementById('header-profile-trigger')
+    const menu = document.getElementById('header-user-menu')
+
+    if (!profile || !trigger || !menu) {
+        return
+    }
+
+    function setMenuState(isOpen) {
+        profile.classList.toggle('is-open', isOpen)
+        trigger.setAttribute('aria-expanded', String(isOpen))
+    }
+
+    trigger.addEventListener('click', (event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        const shouldOpen = !profile.classList.contains('is-open')
+        setMenuState(shouldOpen)
+    })
+
+    menu.addEventListener('click', (event) => {
+        const disabledItem = event.target.closest('.header__user-item--disabled')
+        if (disabledItem) {
+            event.preventDefault()
+            return
+        }
+
+        const clickedItem = event.target.closest('.header__user-item')
+        if (clickedItem) {
+            setMenuState(false)
+        }
+    })
+
+    document.addEventListener('click', (event) => {
+        if (!profile.contains(event.target)) {
+            setMenuState(false)
+        }
+    })
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            setMenuState(false)
+        }
+    })
+}
+
+setupHeaderUserMenu()
+
 /*==================== LINK ACTIVE ====================*/
 const linkColor = document.querySelectorAll('.nav__link')
 const navPanel = document.querySelector('.nav__panel')
+const mobileNav = document.getElementById('navbar')
+const headerToggleButton = document.getElementById('header-toggle')
+
+function closeMobileNavMenu() {
+    if (!mobileNav || !headerToggleButton) {
+        return
+    }
+
+    if (mobileNav.classList.contains('show-menu')) {
+        mobileNav.classList.remove('show-menu')
+        headerToggleButton.classList.remove('bx-x')
+    }
+}
 
 const panelData = {
     inicio: {
@@ -1053,6 +1115,7 @@ if (navPanel) {
         const viewKey = panelItem.dataset.view
         if (viewKey) {
             showPage(viewKey)
+            closeMobileNavMenu()
         }
     })
 }
