@@ -892,6 +892,18 @@ img {
   display: flex;
   gap: .5rem;
   margin-left: auto;
+  flex-wrap: nowrap;
+}
+
+.workflow__actions .btn,
+.workflow__actions .btn--save-highlight {
+  flex: 1 1 0;
+  height: auto;
+  min-height: 28px;
+  padding: .28rem .72rem;
+  line-height: 1.2;
+  white-space: normal;
+  text-align: center;
 }
 
 .workflow__actions-panel {
@@ -908,6 +920,39 @@ img {
 
 .workflow__actions-copy {
   min-width: 240px;
+}
+
+@media screen and (max-width: 1120px) {
+  .workflow__actions-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .workflow__actions-copy {
+    min-width: 0;
+  }
+
+  .workflow__actions {
+    margin-left: 0;
+    width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  .workflow__actions .btn,
+  .workflow__actions .btn--save-highlight {
+    flex: 1 1 0;
+  }
+}
+
+@media screen and (max-width: 920px) {
+  .workflow__actions {
+    flex-wrap: wrap;
+  }
+
+  .workflow__actions .btn,
+  .workflow__actions .btn--save-highlight {
+    flex: 1 1 100%;
+  }
 }
 
 .btn--save-highlight {
@@ -1415,6 +1460,12 @@ img {
   .workflow__actions {
     justify-content: flex-end;
     margin-left: 0;
+    width: 100%;
+  }
+
+  .workflow__actions .btn,
+  .workflow__actions .btn--save-highlight {
+    flex: 1 1 100%;
   }
 
   .workflow__filters {
