@@ -214,7 +214,7 @@ const panelData = {
                 items: [
                     { icon: 'bx-grid-alt', label: 'Todos os arquivos', view: 'todos-arquivos', active: true },
                     { icon: 'bx-transfer', label: 'Documentos pendentes', view: 'fluxo-trabalho' },
-                    { icon: 'bx-shape-square', label: 'Templeites de Documentos', view: 'fluxo-templates' },
+                    { icon: 'bx-shape-square', label: 'Templates de Documentos', view: 'fluxo-templates' },
                     { icon: 'bx-pen', label: 'Assinatura digital', view: 'assinatura-digital' },
                     { icon: 'bx-hdd', label: 'Armazenamento digital', view: 'armazenamento-digital' }
                 ]
