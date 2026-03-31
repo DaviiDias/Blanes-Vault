@@ -128,19 +128,27 @@
             <aside class="nav__panel" aria-label="Conteudo da pagina">
                 <div class="nav__panel-header">Componentes GED</div>
                 <div class="nav__panel-list">
-                    <a href="#" class="nav__panel-item is-active">
+                    <a href="#" class="nav__panel-item is-active" data-view="todos-arquivos">
                         <i class='bx bx-grid-alt'></i>
                         <span>Todos os arquivos</span>
                     </a>
-                    <a href="#" class="nav__panel-item">
-                        <i class='bx bx-transfer'></i>
-                        <span>Fluxo de trabalho</span>
+                    <a href="#" class="nav__panel-item" data-view="dashboard">
+                        <i class='bx bx-chart'></i>
+                        <span>Dashboard</span>
                     </a>
-                    <a href="#" class="nav__panel-item">
+                    <a href="#" class="nav__panel-item" data-view="fluxo-trabalho">
+                        <i class='bx bx-transfer'></i>
+                        <span>Documentos pendentes</span>
+                    </a>
+                    <a href="#" class="nav__panel-item" data-view="fluxo-templates">
+                        <i class='bx bx-shape-square'></i>
+                        <span>Templates de Documentos</span>
+                    </a>
+                    <a href="#" class="nav__panel-item" data-view="assinatura-digital">
                         <i class='bx bx-pen'></i>
                         <span>Assinatura digital</span>
                     </a>
-                    <a href="#" class="nav__panel-item">
+                    <a href="#" class="nav__panel-item" data-view="armazenamento-digital">
                         <i class='bx bx-hdd'></i>
                         <span>Armazenamento digital</span>
                     </a>
@@ -319,6 +327,116 @@
                 </div>
             </section>
 
+            <section class="page" data-view="dashboard">
+                <div class="dashboard">
+                    <!-- Dashboard Header -->
+                    <div class="dashboard__header">
+                        <div>
+                            <h1 class="page__title">Dashboard</h1>
+                            <p class="page__subtitle">Acompanhe o status dos seus documentos e fique atento aos vencimentos e pendências.</p>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div class="dashboard__kpi-container">
+                        <div class="dashboard__kpi-card dashboard__kpi-card--pending">
+                            <div class="dashboard__kpi-header">
+                                <span class="dashboard__kpi-value">1+</span>
+                                <i class='bx bx-file dashboard__kpi-icon'></i>
+                            </div>
+                            <div class="dashboard__kpi-body">
+                                <h3 class="dashboard__kpi-title">Documento(s)</h3>
+                                <p class="dashboard__kpi-subtitle">Pendente de preenchimento</p>
+                            </div>
+                            <button type="button" class="dashboard__kpi-action">Visualizar</button>
+                        </div>
+
+                        <div class="dashboard__kpi-card dashboard__kpi-card--expired">
+                            <div class="dashboard__kpi-header">
+                                <span class="dashboard__kpi-value">0+</span>
+                                <i class='bx bx-x-circle dashboard__kpi-icon'></i>
+                            </div>
+                            <div class="dashboard__kpi-body">
+                                <h3 class="dashboard__kpi-title">Documentos Vencidos</h3>
+                                <p class="dashboard__kpi-subtitle">Vigência expirada</p>
+                            </div>
+                            <button type="button" class="dashboard__kpi-action">Visualizar</button>
+                        </div>
+
+                        <div class="dashboard__kpi-card dashboard__kpi-card--expiring">
+                            <div class="dashboard__kpi-header">
+                                <span class="dashboard__kpi-value">0+</span>
+                                <i class='bx bx-time-five dashboard__kpi-icon'></i>
+                            </div>
+                            <div class="dashboard__kpi-body">
+                                <h3 class="dashboard__kpi-title">Documentos a Vencer</h3>
+                                <p class="dashboard__kpi-subtitle">Próximos 30 dias</p>
+                            </div>
+                            <button type="button" class="dashboard__kpi-action">Visualizar</button>
+                        </div>
+
+
+                    </div>
+
+                    <!-- Dashboard Main Content -->
+                    <div class="dashboard__content">
+                        <!-- Documentos Aguardando Terceiros -->
+                        <section class="dashboard__section">
+                            <div class="dashboard__section-header">
+                                <h2 class="dashboard__section-title">
+                                    <i class='bx bx-user-check'></i>
+                                    Documentos Aguardando Terceiros
+                                </h2>
+                                <a href="#" class="dashboard__section-link">Ver todos os documentos</a>
+                            </div>
+                            <div class="dashboard__documents-list" id="dashboard-pending-docs">
+                                <div class="dashboard__document-item" data-doc-id="1">
+                                    <div class="dashboard__document-header">
+                                        <h3 class="dashboard__document-name">Contrato de Prestação de Serviço</h3>
+                                        <span class="dashboard__document-status dashboard__document-status--pending">Aguardando Informações</span>
+                                    </div>
+                                    <div class="dashboard__document-meta">
+                                        <span class="dashboard__document-info">
+                                            <i class='bx bx-user'></i>
+                                            Aguardando: Gestor e Colaborador
+                                        </span>
+                                        <span class="dashboard__document-date">
+                                            <i class='bx bx-calendar'></i>
+                                            Criado em 20 de Março
+                                        </span>
+                                    </div>
+                                    <p class="dashboard__document-description">O documento está na etapa 2 de 5. Necessário preenchimento de dados contratuais e assinatura digital.</p>
+                                    <div class="dashboard__document-actions">
+                                        <button type="button" class="btn btn--primary dashboard__view-workflow-btn">Visualizar Fluxo</button>
+                                    </div>
+                                </div>
+
+                                <div class="dashboard__document-item" data-doc-id="2">
+                                    <div class="dashboard__document-header">
+                                        <h3 class="dashboard__document-name">NDA - Acordo de Confidencialidade</h3>
+                                        <span class="dashboard__document-status dashboard__document-status--review">Em Revisão</span>
+                                    </div>
+                                    <div class="dashboard__document-meta">
+                                        <span class="dashboard__document-info">
+                                            <i class='bx bx-user'></i>
+                                            Aguardando: Departamento Jurídico
+                                        </span>
+                                        <span class="dashboard__document-date">
+                                            <i class='bx bx-calendar'></i>
+                                            Criado em 18 de Março
+                                        </span>
+                                    </div>
+                                    <p class="dashboard__document-description">Documento em fase de revisão jurídica. Prazo estimado: 2 dias úteis.</p>
+                                    <div class="dashboard__document-actions">
+                                        <button type="button" class="btn btn--primary dashboard__view-workflow-btn">Visualizar Fluxo</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </section>
+
             <section class="page" data-view="fluxo-trabalho">
                 <div class="workflow">
                     <div class="workflow__toolbar">
@@ -377,6 +495,80 @@
                 <p class="page__placeholder">Armazenamento digital será construído no próximo passo.</p>
             </section>
         </main>
+
+        <!--========== MODAL VISUALIZAR FLUXO ==========-->
+        <div class="modal-overlay is-hidden" id="workflow-modal">
+            <div class="modal-container modal-container--workflow">
+                <button type="button" class="modal-close-btn" id="workflow-modal-close" aria-label="Fechar modal">
+                    <i class='bx bx-x'></i>
+                </button>
+                <h2 class="modal-title" id="workflow-modal-title">Visualizar Fluxo</h2>
+                
+                <div class="workflow-steps-container" id="workflow-steps">
+                    <div class="workflow-step">
+                        <div class="workflow-step__number">1</div>
+                        <div class="workflow-step__content">
+                            <h3 class="workflow-step__title">Dados Contratuais</h3>
+                            <p class="workflow-step__responsible">Responsável: Gestor</p>
+                            <p class="workflow-step__description">Preenchimento dos dados básicos do contrato como datas, valores e partes envolvidas.</p>
+                            <span class="workflow-step__status workflow-step__status--completed">✓ Concluído</span>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step__divider"></div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-step__number">2</div>
+                        <div class="workflow-step__content">
+                            <h3 class="workflow-step__title">Informações do Colaborador</h3>
+                            <p class="workflow-step__responsible">Responsável: Colaborador</p>
+                            <p class="workflow-step__description">Preenchimento de dados complementares e informações do colaborador que assinará o documento.</p>
+                            <span class="workflow-step__status workflow-step__status--pending">⟳ Pendente</span>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step__divider"></div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-step__number">3</div>
+                        <div class="workflow-step__content">
+                            <h3 class="workflow-step__title">Revisão de Conformidade</h3>
+                            <p class="workflow-step__responsible">Responsável: Gestor</p>
+                            <p class="workflow-step__description">Revisão dos dados inseridos para garantir conformidade com as políticas internas.</p>
+                            <span class="workflow-step__status workflow-step__status--pending">⟳ Pendente</span>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step__divider"></div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-step__number">4</div>
+                        <div class="workflow-step__content">
+                            <h3 class="workflow-step__title">Assinatura Digital</h3>
+                            <p class="workflow-step__responsible">Responsável: Colaborador e Gestor</p>
+                            <p class="workflow-step__description">Assinatura digital do documento por ambas as partes para formalização.</p>
+                            <span class="workflow-step__status workflow-step__status--pending">⟳ Pendente</span>
+                        </div>
+                    </div>
+
+                    <div class="workflow-step__divider"></div>
+
+                    <div class="workflow-step">
+                        <div class="workflow-step__number">5</div>
+                        <div class="workflow-step__content">
+                            <h3 class="workflow-step__title">Arquivamento</h3>
+                            <p class="workflow-step__responsible">Responsável: Sistema</p>
+                            <p class="workflow-step__description">Archivamento automático do documento no repositório digital seguro.</p>
+                            <span class="workflow-step__status workflow-step__status--pending">⟳ Pendente</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn modal-btn--cancel" id="workflow-modal-cancel">Fechar</button>
+                </div>
+            </div>
+        </div>
 
         <!--========== MODAL NOVA PASTA ==========-->
         <div class="modal-overlay is-hidden" id="new-folder-modal">

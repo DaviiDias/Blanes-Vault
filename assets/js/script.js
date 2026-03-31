@@ -213,6 +213,7 @@ const panelData = {
             {
                 items: [
                     { icon: 'bx-grid-alt', label: 'Todos os arquivos', view: 'todos-arquivos', active: true },
+                    { icon: 'bx bx-layer', label: 'Dashboard', view: 'dashboard' },
                     { icon: 'bx-transfer', label: 'Documentos pendentes', view: 'fluxo-trabalho' },
                     { icon: 'bx-shape-square', label: 'Templates de Documentos', view: 'fluxo-templates' },
                     { icon: 'bx-pen', label: 'Assinatura digital', view: 'assinatura-digital' },
@@ -1190,6 +1191,18 @@ function showPage(viewKey) {
     }
 }
 
+function selectPanelItem(viewKey) {
+    const panelItems = document.querySelectorAll('.nav__panel-item')
+    panelItems.forEach((item) => {
+        if (item.dataset.view === viewKey) {
+            item.classList.add('is-active')
+        } else {
+            item.classList.remove('is-active')
+        }
+    })
+    showPage(viewKey)
+}
+
 function renderPanel(key) {
     if (!navPanel || !panelData[key]) {
         return
@@ -1259,6 +1272,173 @@ if (initial) {
 }
 
 initTodosArquivosMocks()
+
+/*==================== DASHBOARD MODAL FLUXO ====================*/
+function setupDashboardModal() {
+    const workflowModal = document.getElementById('workflow-modal')
+    const workflowModalClose = document.getElementById('workflow-modal-close')
+    const workflowModalCancel = document.getElementById('workflow-modal-cancel')
+    const viewWorkflowButtons = document.querySelectorAll('.dashboard__view-workflow-btn')
+
+    if (!workflowModal) return
+
+    // Fecha a modal
+    function closeWorkflowModal() {
+        workflowModal.classList.add('is-hidden')
+    }
+
+    // Abre a modal
+    function openWorkflowModal(docId) {
+        workflowModal.classList.remove('is-hidden')
+        // Aqui você poderia carregar dados específicos do documento se necessário
+        // Por enquanto está com dados mockados
+    }
+
+    // Adiciona listeners aos botões "Visualizar Fluxo"
+    viewWorkflowButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault()
+            openWorkflowModal(btn.closest('.dashboard__document-item').dataset.docId)
+        })
+    })
+
+    // Fecha ao clicar no botão de fechar
+    if (workflowModalClose) {
+        workflowModalClose.addEventListener('click', closeWorkflowModal)
+    }
+
+    // Fecha ao clicar em "Fechar"
+    if (workflowModalCancel) {
+        workflowModalCancel.addEventListener('click', closeWorkflowModal)
+    }
+
+    // Fecha ao clicar fora da modal
+    workflowModal.addEventListener('click', (e) => {
+        if (e.target === workflowModal) {
+            closeWorkflowModal()
+        }
+    })
+
+    // Fecha ao pressionar ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !workflowModal.classList.contains('is-hidden')) {
+            closeWorkflowModal()
+        }
+    })
+}
+
+/*==================== DASHBOARD KPI CARDS ====================*/
+function setupDashboardKPICards() {
+    const pendingCard = document.querySelector('.dashboard__kpi-card--pending .dashboard__kpi-action')
+    const expiredCard = document.querySelector('.dashboard__kpi-card--expired .dashboard__kpi-action')
+    const expiringCard = document.querySelector('.dashboard__kpi-card--expiring .dashboard__kpi-action')
+    
+    const pendingValue = document.querySelector('.dashboard__kpi-card--pending .dashboard__kpi-value')
+    const expiredValue = document.querySelector('.dashboard__kpi-card--expired .dashboard__kpi-value')
+    const expiringValue = document.querySelector('.dashboard__kpi-card--expiring .dashboard__kpi-value')
+
+    // Card Documentos Pendentes
+    if (pendingCard && pendingValue) {
+        const count = parseInt(pendingValue.textContent) || 0
+        if (count > 0) {
+            pendingCard.addEventListener('click', (e) => {
+                e.preventDefault()
+                // Redireciona para a página de documentos pendentes
+                selectPanelItem('fluxo-trabalho')
+                // Scroll para o topo
+                window.scrollTo(0, 0)
+            })
+        } else {
+            pendingCard.addEventListener('click', (e) => {
+                e.preventDefault()
+                showAppAlert({
+                    type: 'info',
+                    title: 'Documentos Pendentes',
+                    message: 'Não há documentos pendentes para serem preenchidos no momento.',
+                    duration: 4000
+                })
+            })
+        }
+    }
+
+    // Card Documentos Vencidos
+    if (expiredCard && expiredValue) {
+        const count = parseInt(expiredValue.textContent) || 0
+        if (count === 0) {
+            expiredCard.addEventListener('click', (e) => {
+                e.preventDefault()
+                showAppAlert({
+                    type: 'info',
+                    title: 'Documentos Vencidos',
+                    message: 'Não há documentos vencidos no momento.',
+                    duration: 4000
+                })
+            })
+        } else {
+            expiredCard.addEventListener('click', (e) => {
+                e.preventDefault()
+                showAppAlert({
+                    type: 'warning',
+                    title: 'Documentos Vencidos',
+                    message: `Você tem ${count} documento(s) com vigência expirada. Revise-os com urgência.`,
+                    duration: 4000
+                })
+            })
+        }
+    }
+
+    // Card Documentos a Vencer
+    if (expiringCard && expiringValue) {
+        const count = parseInt(expiringValue.textContent) || 0
+        if (count === 0) {
+            expiringCard.addEventListener('click', (e) => {
+                e.preventDefault()
+                showAppAlert({
+                    type: 'info',
+                    title: 'Documentos a Vencer',
+                    message: 'Não há documentos para vencer nos próximos 30 dias.',
+                    duration: 4000
+                })
+            })
+        } else {
+            expiringCard.addEventListener('click', (e) => {
+                e.preventDefault()
+                showAppAlert({
+                    type: 'warning',
+                    title: 'Documentos a Vencer',
+                    message: `Você tem ${count} documento(s) vencendo nos próximos 30 dias. Fique atento às datas.`,
+                    duration: 4000
+                })
+            })
+        }
+    }
+}
+
+/*==================== DASHBOARD VER TODOS OS DOCUMENTOS ====================*/
+function setupDashboardViewAll() {
+    const viewAllLinks = document.querySelectorAll('.dashboard__section-link')
+
+    viewAllLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault()
+            // Se for o link de "Ver todos os documentos" na seção de documentos aguardando
+            const section = link.closest('.dashboard__section')
+            if (section && section.querySelector('.dashboard__documents-list')) {
+                showAppAlert({
+                    type: 'info',
+                    title: 'Documentos Aguardando Terceiros',
+                    message: 'Exibindo todos os documentos que estão aguardando terceiros.',
+                    duration: 3000
+                })
+                // Você pode expandir a seção ou abrir uma página de detalhes aqui
+            }
+        })
+    })
+}
+
+setupDashboardModal()
+setupDashboardKPICards()
+setupDashboardViewAll()
 
 /*==================== MODAL NOVA PASTA ====================*/
 function setupNewFolderModal() {
